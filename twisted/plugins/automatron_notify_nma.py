@@ -4,7 +4,7 @@ from twisted.internet import defer
 from twisted.web.client import getPage
 from twisted.python import log
 from zope.interface import classProvides, implements
-from automatron.client import IAutomatronMessageHandler
+from automatron.command import IAutomatronCommandHandler
 from automatron.plugin import IAutomatronPluginFactory, STOP
 from automatron_notify import IAutomatronNotifyHandler
 
@@ -14,7 +14,7 @@ SERVICE = 'https://www.notifymyandroid.com/publicapi/notify'
 
 class AutomatronNotifyMyAndroidNotifyPlugin(object):
     classProvides(IAutomatronPluginFactory)
-    implements(IAutomatronNotifyHandler, IAutomatronMessageHandler)
+    implements(IAutomatronNotifyHandler, IAutomatronCommandHandler)
 
     name = 'notify_notifymyandroid'
     priority = 100
@@ -74,24 +74,23 @@ class AutomatronNotifyMyAndroidNotifyPlugin(object):
         except Exception as e:
             log.err(e, 'NotifyMyAndroid request failed')
 
-    @defer.inlineCallbacks
-    def on_message(self, client, user, channel, message):
-        if channel != client.nickname or not (message.startswith('notifymyandroid ') or message == 'notifymyandroid'):
-            return
+    def on_command(self, client, user, command, args):
+        if command == 'notifymyandroid':
+            self._on_command_notifymyandroid(client, user, args)
+            return STOP
 
+    @defer.inlineCallbacks
+    def _on_command_notifymyandroid(self, client, user, args):
         if not (yield self.controller.config.has_permission(client.server, None, user, 'notifymyandroid')):
             client.msg('You\'re not authorized to use the NotifyMyAndroid plugin.')
-            return
 
         nickname = client.parse_user(user)[0]
 
-        if message == 'notifymyandroid':
+        if len(args) != 1:
             client.msg(nickname, 'Syntax: notifymyandroid <api key>')
-            return
+            defer.returnValue(STOP)
 
-        api_key = message.split(' ', 1)[1].strip()
+        api_key = args[0].strip()
         username, _ = yield client.controller.config.get_username_by_hostmask(client.server, user)
         self.controller.config.update_user_preference(client.server, username, 'notifymyandroid.api_key', api_key)
         client.msg(nickname, 'Updated your NotifyMyAndroid configuration.')
-
-        defer.returnValue(STOP)

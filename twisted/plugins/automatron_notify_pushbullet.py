@@ -1,4 +1,7 @@
-import json
+try:
+    import ujson as json
+except ImportError:
+    import json
 import urllib
 from twisted.internet import defer
 from twisted.python import log

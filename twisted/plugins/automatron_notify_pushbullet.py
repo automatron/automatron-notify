@@ -82,13 +82,11 @@ class AutomatronPushBulletNotifyPlugin(object):
     @defer.inlineCallbacks
     def _on_command_pushbullet(self, client, user, args):
         if not (yield self.controller.config.has_permission(client.server, None, user, 'pushbullet')):
-            client.msg('You\'re not authorized to use the PushBullet plugin.')
+            client.msg(user, 'You\'re not authorized to use the PushBullet plugin.')
             return
 
-        nickname = client.parse_user(user)[0]
-
         if not args:
-            client.msg(nickname, 'Syntax: pushbullet <api key> [device identifier...]')
+            client.msg(user, 'Syntax: pushbullet <api key> [device identifier...]')
             return
 
         api_key = args.pop(0)
@@ -97,6 +95,6 @@ class AutomatronPushBulletNotifyPlugin(object):
         username, _ = yield client.controller.config.get_username_by_hostmask(client.server, user)
         self.controller.config.update_user_preference(client.server, username, 'pushbullet.api_key', api_key)
         self.controller.config.update_user_preference(client.server, username, 'pushbullet.devices', devices)
-        client.msg(nickname, 'Updated your PushBullet configuration.')
+        client.msg(user, 'Updated your PushBullet configuration.')
 
         defer.returnValue(STOP)

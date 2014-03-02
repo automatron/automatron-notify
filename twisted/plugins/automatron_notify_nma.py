@@ -82,15 +82,13 @@ class AutomatronNotifyMyAndroidNotifyPlugin(object):
     @defer.inlineCallbacks
     def _on_command_notifymyandroid(self, client, user, args):
         if not (yield self.controller.config.has_permission(client.server, None, user, 'notifymyandroid')):
-            client.msg('You\'re not authorized to use the NotifyMyAndroid plugin.')
-
-        nickname = client.parse_user(user)[0]
+            client.msg(user, 'You\'re not authorized to use the NotifyMyAndroid plugin.')
 
         if len(args) != 1:
-            client.msg(nickname, 'Syntax: notifymyandroid <api key>')
+            client.msg(user, 'Syntax: notifymyandroid <api key>')
             defer.returnValue(STOP)
 
         api_key = args[0].strip()
         username, _ = yield client.controller.config.get_username_by_hostmask(client.server, user)
         self.controller.config.update_user_preference(client.server, username, 'notifymyandroid.api_key', api_key)
-        client.msg(nickname, 'Updated your NotifyMyAndroid configuration.')
+        client.msg(user, 'Updated your NotifyMyAndroid configuration.')

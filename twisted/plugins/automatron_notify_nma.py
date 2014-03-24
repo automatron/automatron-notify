@@ -76,17 +76,17 @@ class AutomatronNotifyMyAndroidNotifyPlugin(object):
         except Exception as e:
             log.err(e, 'NotifyMyAndroid request failed')
 
-    def on_command(self, client, user, command, args):
+    def on_command(self, server, user, command, args):
         if command == 'notifymyandroid':
-            self._on_command_notifymyandroid(client, user, args)
+            self._on_command_notifymyandroid(server, user, args)
             return STOP
 
     @defer.inlineCallbacks
-    def _on_command_notifymyandroid(self, client, user, args):
-        if not (yield self.controller.config.has_permission(client.server, None, user, 'notifymyandroid')):
+    def _on_command_notifymyandroid(self, server, user, args):
+        if not (yield self.controller.config.has_permission(server['server'], None, user, 'notifymyandroid')):
             self.controller.plugins.emit(
                 IAutomatronClientActions['message'],
-                client.server,
+                server['server'],
                 user,
                 'You\'re not authorized to use the NotifyMyAndroid plugin.'
             )
@@ -94,18 +94,18 @@ class AutomatronNotifyMyAndroidNotifyPlugin(object):
         if len(args) != 1:
             self.controller.plugins.emit(
                 IAutomatronClientActions['message'],
-                client.server,
+                server['server'],
                 user,
                 'Syntax: notifymyandroid <api key>'
             )
             defer.returnValue(STOP)
 
         api_key = args[0].strip()
-        username, _ = yield client.controller.config.get_username_by_hostmask(client.server, user)
-        self.controller.config.update_user_preference(client.server, username, 'notifymyandroid.api_key', api_key)
+        username, _ = yield self.controller.config.get_username_by_hostmask(server['server'], user)
+        self.controller.config.update_user_preference(server['server'], username, 'notifymyandroid.api_key', api_key)
         self.controller.plugins.emit(
             IAutomatronClientActions['message'],
-            client.server,
+            server['server'],
             user,
             'Updated your NotifyMyAndroid configuration.'
         )

@@ -77,17 +77,17 @@ class AutomatronPushBulletNotifyPlugin(object):
             except Exception as e:
                 log.err(e, 'PushBullet request failed')
 
-    def on_command(self, client, user, command, args):
+    def on_command(self, server, user, command, args):
         if command == 'pushbullet':
-            self._on_command_pushbullet(client, user, args)
+            self._on_command_pushbullet(server, user, args)
             return STOP
 
     @defer.inlineCallbacks
-    def _on_command_pushbullet(self, client, user, args):
-        if not (yield self.controller.config.has_permission(client.server, None, user, 'pushbullet')):
+    def _on_command_pushbullet(self, server, user, args):
+        if not (yield self.controller.config.has_permission(server['server'], None, user, 'pushbullet')):
             self.controller.plugins.emit(
                 IAutomatronClientActions['message'],
-                client.server,
+                server['server'],
                 user,
                 'You\'re not authorized to use the PushBullet plugin.'
             )
@@ -96,7 +96,7 @@ class AutomatronPushBulletNotifyPlugin(object):
         if not args:
             self.controller.plugins.emit(
                 IAutomatronClientActions['message'],
-                client.server,
+                server['server'],
                 user,
                 'Syntax: pushbullet <api key> [device identifier...]'
             )
@@ -105,12 +105,12 @@ class AutomatronPushBulletNotifyPlugin(object):
         api_key = args.pop(0)
         devices = ','.join(args)
 
-        username, _ = yield client.controller.config.get_username_by_hostmask(client.server, user)
-        self.controller.config.update_user_preference(client.server, username, 'pushbullet.api_key', api_key)
-        self.controller.config.update_user_preference(client.server, username, 'pushbullet.devices', devices)
+        username, _ = yield self.controller.config.get_username_by_hostmask(server['server'], user)
+        self.controller.config.update_user_preference(server['server'], username, 'pushbullet.api_key', api_key)
+        self.controller.config.update_user_preference(server['server'], username, 'pushbullet.devices', devices)
         self.controller.plugins.emit(
             IAutomatronClientActions['message'],
-            client.server,
+            server['server'],
             user,
             'Updated your PushBullet configuration.'
         )

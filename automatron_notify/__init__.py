@@ -1,4 +1,4 @@
-from automatron.controller.plugin import IAutomatronEventHandler
+from automatron.core.event import IAutomatronEventHandler
 
 
 class IAutomatronNotifyHandler(IAutomatronEventHandler):

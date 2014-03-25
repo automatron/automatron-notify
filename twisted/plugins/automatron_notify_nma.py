@@ -5,7 +5,6 @@ from twisted.web.client import getPage
 from twisted.python import log
 from zope.interface import classProvides, implements
 from automatron.backend.command import IAutomatronCommandHandler
-from automatron.controller.controller import IAutomatronClientActions
 from automatron.backend.plugin import IAutomatronPluginFactory
 from automatron.core.event import STOP
 from automatron_notify import IAutomatronNotifyHandler
@@ -84,28 +83,13 @@ class AutomatronNotifyMyAndroidNotifyPlugin(object):
     @defer.inlineCallbacks
     def _on_command_notifymyandroid(self, server, user, args):
         if not (yield self.controller.config.has_permission(server['server'], None, user, 'notifymyandroid')):
-            self.controller.plugins.emit(
-                IAutomatronClientActions['message'],
-                server['server'],
-                user,
-                'You\'re not authorized to use the NotifyMyAndroid plugin.'
-            )
+            self.controller.message(server['server'], user, 'You\'re not authorized to use the NotifyMyAndroid plugin.')
 
         if len(args) != 1:
-            self.controller.plugins.emit(
-                IAutomatronClientActions['message'],
-                server['server'],
-                user,
-                'Syntax: notifymyandroid <api key>'
-            )
+            self.controller.message(server['server'], user, 'Syntax: notifymyandroid <api key>')
             defer.returnValue(STOP)
 
         api_key = args[0].strip()
         username, _ = yield self.controller.config.get_username_by_hostmask(server['server'], user)
         self.controller.config.update_user_preference(server['server'], username, 'notifymyandroid.api_key', api_key)
-        self.controller.plugins.emit(
-            IAutomatronClientActions['message'],
-            server['server'],
-            user,
-            'Updated your NotifyMyAndroid configuration.'
-        )
+        self.controller.message(server['server'], user, 'Updated your NotifyMyAndroid configuration.')

@@ -1,4 +1,3 @@
-from automatron.controller.controller import IAutomatronClientActions
 from automatron.core.event import STOP
 
 try:
@@ -85,21 +84,11 @@ class AutomatronPushBulletNotifyPlugin(object):
     @defer.inlineCallbacks
     def _on_command_pushbullet(self, server, user, args):
         if not (yield self.controller.config.has_permission(server['server'], None, user, 'pushbullet')):
-            self.controller.plugins.emit(
-                IAutomatronClientActions['message'],
-                server['server'],
-                user,
-                'You\'re not authorized to use the PushBullet plugin.'
-            )
+            self.controller.message(server['server'], user, 'You\'re not authorized to use the PushBullet plugin.')
             return
 
         if not args:
-            self.controller.plugins.emit(
-                IAutomatronClientActions['message'],
-                server['server'],
-                user,
-                'Syntax: pushbullet <api key> [device identifier...]'
-            )
+            self.controller.message(server['server'], user, 'Syntax: pushbullet <api key> [device identifier...]')
             return
 
         api_key = args.pop(0)
@@ -108,11 +97,6 @@ class AutomatronPushBulletNotifyPlugin(object):
         username, _ = yield self.controller.config.get_username_by_hostmask(server['server'], user)
         self.controller.config.update_user_preference(server['server'], username, 'pushbullet.api_key', api_key)
         self.controller.config.update_user_preference(server['server'], username, 'pushbullet.devices', devices)
-        self.controller.plugins.emit(
-            IAutomatronClientActions['message'],
-            server['server'],
-            user,
-            'Updated your PushBullet configuration.'
-        )
+        self.controller.message(server['server'], user, 'Updated your PushBullet configuration.')
 
         defer.returnValue(STOP)
